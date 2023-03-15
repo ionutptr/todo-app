@@ -1,0 +1,45 @@
+---
+- name: Install dependencies and run containers
+  hosts: app
+  become: true
+
+  tasks:
+    - name: Upgrade pip
+      pip:
+        name: pip
+        executable: pip3
+        state: latest
+
+    - name: Install pip modules
+      pip:
+        name: "{{ item }}"
+      loop:
+        - setuptools_rust
+        - cryptography
+        - docker-compose
+
+    - name: Create git archive from repo
+      git:
+        repo: https://github.com/docker/getting-started.git
+        dest: /home/ansible/getting-started
+        clone: yes
+
+    - name: Replace parameters in app
+      shell: sed -i 's/Add Item/Add/g' /home/ansible/getting-started/app/src/static/js/app.js; sed -i 's/No items yet/You have no todo items yet/g' /home/ansible/getting-started/app/src/static/js/app.js
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        enabled: yes
+        state: started
+
+    - name: Copy docker-compose file to target 
+      copy:
+        src: /etc/ansible/docker-compose.yml
+        dest: /home/ansible/getting-started/app/docker-compose.yml
+        mode: '0755'
+        owner: ansible
+        group: ansible
+
+    - name: Create containers and start the app
+      shell: cd /home/ansible/getting-started/app/ &&  docker compose up -d
