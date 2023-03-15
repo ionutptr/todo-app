@@ -42,4 +42,4 @@
 
 ## db-[99:101]-node.example.com
 [app]
-target ansible_host=192.168.1.166 ansible_user=ansible
+target ansible_host=192.168.1.168 ansible_user=ansible
